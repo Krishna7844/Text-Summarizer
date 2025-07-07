@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Summarization Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .title {
+            text-align: center;
+            color: #2d3748;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #718096;
+            font-size: 1.1rem;
+            margin-bottom: 40px;
+            font-weight: 300;
+        }
+
+        .form-group {
+            margin-bottom: 30px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 1.1rem;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+            transition: all 0.3s ease;
+            background: #f8fafc;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            background: white;
+        }
+
+        #inputText {
+            min-height: 150px;
+        }
+
+        #outputText {
+            min-height: 120px;
+            background: #f1f5f9;
+            color: #2d3748;
+            cursor: text;
+        }
+
+        .button-container {
+            text-align: center;
+            margin: 30px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .file-upload-btn {
+            padding: 15px;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            text-transform: none;
+            letter-spacing: 0;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: #667eea;
+            font-weight: 600;
+            margin: 20px 0;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .error.active {
+            display: block;
+        }
+
+        .success {
+            background: #c6f6d5;
+            color: #22543d;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .success.active {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .title {
+                font-size: 2rem;
+            }
+            
+            button {
+                padding: 12px 30px;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">AI Text Summarizer</h1>
+        <p class="subtitle">Transform long text into concise summaries with AI</p>
+        
+        <div class="form-group">
+            <label for="inputText">Enter your text to summarize:</label>
+            <textarea 
+                id="inputText" 
+                placeholder="Paste your long text here... (articles, documents, essays, etc.)"
+                aria-label="Input text for summarization"
+            ></textarea>
+        </div>
+        
+        <div class="button-container">
+            <input type="file" id="fileInput" class="file-input" accept=".txt" onchange="handleFileUpload(event)">
+            <button id="fileUploadBtn" class="file-upload-btn" onclick="document.getElementById('fileInput').click()" title="Upload text file">
+                📁
+            </button>
+            <button id="summarizeBtn" onclick="summarizeText()">
+                Summarize Text
+            </button>
+        </div>
+        
+        <div class="loading" id="loadingIndicator">
+            <div class="spinner"></div>
+            Processing your text...
+        </div>
+        
+        <div class="error" id="errorMessage"></div>
+        <div class="success" id="successMessage"></div>
+        
+        <div class="form-group">
+            <label for="outputText">Summarized text:</label>
+            <textarea 
+                id="outputText" 
+                readonly 
+                placeholder="Your summarized text will appear here..."
+                aria-label="Summarized text output"
+            ></textarea>
+        </div>
+    </div>
+
+    <script>
+        let isProcessing = false;
+
+        function showLoading() {
+            document.getElementById('loadingIndicator').classList.add('active');
+            document.getElementById('summarizeBtn').disabled = true;
+            document.getElementById('errorMessage').classList.remove('active');
+            document.getElementById('successMessage').classList.remove('active');
+            isProcessing = true;
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingIndicator').classList.remove('active');
+            document.getElementById('summarizeBtn').disabled = false;
+            isProcessing = false;
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.classList.add('active');
+            hideLoading();
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('successMessage');
+            successDiv.textContent = message;
+            successDiv.classList.add('active');
+            hideLoading();
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (file.type !== 'text/plain') {
+                showError('Please select a text file (.txt)');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+                document.getElementById('inputText').value = content;
+                showSuccess(`File "${file.name}" loaded successfully!`);
+            };
+
+            reader.onerror = function() {
+                showError('Error reading file. Please try again.');
+            };
+
+            reader.readAsText(file);
+        }
+
+        async function summarizeText() {
+            if (isProcessing) return;
+
+            const inputText = document.getElementById('inputText').value.trim();
+            
+            if (!inputText) {
+                showError('Please enter some text to summarize.');
+                return;
+            }
+
+            if (inputText.length < 50) {
+                showError('Please enter at least 50 characters for meaningful summarization.');
+                return;
+            }
+
+            showLoading();
+
+            const payload = {
+                role: "Summarized this text",
+                message: inputText
+            };
+
+            try {
+                const response = await fetch('http://127.0.0.1:5000/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.response) {
+                    document.getElementById('outputText').value = data.response;
+                    showSuccess('Text summarized successfully!');
+                } else {
+                    throw new Error('No response received from the server');
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                let errorMessage = 'Failed to summarize text. ';
+                
+                if (error.message.includes('Failed to fetch')) {
+                    errorMessage += 'Please make sure your API server is running on http://127.0.0.1:5000';
+                } else if (error.message.includes('HTTP error')) {
+                    errorMessage += `Server error: ${error.message}`;
+                } else {
+                    errorMessage += error.message;
+                }
+                
+                showError(errorMessage);
+            }
+        }
+
+        // Allow Enter key to trigger summarization (Ctrl+Enter)
+        document.getElementById('inputText').addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                e.preventDefault();
+                summarizeText();
+            }
+        });
+
+        // Auto-hide messages after 5 seconds
+        function autoHideMessages() {
+            setTimeout(() => {
+                document.getElementById('errorMessage').classList.remove('active');
+                document.getElementById('successMessage').classList.remove('active');
+            }, 5000);
+        }
+
+        // Override show functions to include auto-hide
+        const originalShowError = showError;
+        const originalShowSuccess = showSuccess;
+
+        showError = function(message) {
+            originalShowError(message);
+            autoHideMessages();
+        };
+
+        showSuccess = function(message) {
+            originalShowSuccess(message);
+            autoHideMessages();
+        };
+    </script>
+</body>
+</html>
